@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Content Include="Assets\app.ico" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <Resource Include="Assets\icons8-error-96.png" />
     <Resource Include="Assets\icons8-add-96.png" />
     <Resource Include="Assets\icons8-remove-96.png" />

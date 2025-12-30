@@ -1,4 +1,6 @@
-using element_profiles.Models;
+﻿using element_profiles.Models;
+using element_profiles.Views;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -10,6 +12,8 @@ namespace element_profiles
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        private static readonly string PROFILE_FOLDER = Path.Combine(Directory.GetCurrentDirectory(), "profiles");
+
         private static string? elementExecutablePath;
 
         private string _elementVersion;
@@ -63,27 +67,88 @@ namespace element_profiles
             string version = versionInfo.FileVersion ?? "Error";
             ElementVersion = version;
             elementExecutablePath = elementExec;
-
         }
 
         public void LoadProfiles()
         {
-            ElementProfiles = new ObservableCollection<Profile>();
+            ElementProfiles = new();
 
+            // Create Profiles Directory if it doesn't exist
+            if (!Directory.Exists(PROFILE_FOLDER)) {
+                try
+                {
+                    Directory.CreateDirectory(PROFILE_FOLDER);
+                }
+                catch (Exception ex)
+                {
+                    MessageDialog md = new()
+                    {
+                        WindowTitle = "Error",
+                        Message = ex.Message,
+                    };
+                    md.ShowDialog();
+                    return;
+                }
+            }
+
+            // Load Profiles from Profile Folder
+            foreach(string file in Directory.GetFiles(PROFILE_FOLDER, "*.json"))
+            {
+                string json = File.ReadAllText(file);
+                Profile? deserialized = JsonConvert.DeserializeObject<Profile>(json);
+                if (deserialized != null)
+                {
+                    ElementProfiles.Add(deserialized);
+                }
+            }
+
+            // TO-DO: Verify profiles all still exist
+
+            // Import Element Profiles (AppData)
             string roamingAppdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            foreach(string folder in Directory.GetDirectories(roamingAppdata, "*Element*", SearchOption.TopDirectoryOnly))
+            foreach (string folder in Directory.GetDirectories(roamingAppdata, "*Element*", SearchOption.TopDirectoryOnly))
             {
                 string folderName = Path.GetFileName(folder);
 
                 // Default Profile
                 if (folderName == "Element")
                 {
-                    ElementProfiles.Add(new Profile() { Name = "Default" });
-                    continue; 
+                    // Skip already imported profiles
+                    if (ProfileExists(folderName))
+                    {
+                        Debug.WriteLine($"Skipped import: {folderName}");
+                        continue;
+                    }
+
+                    // Create Profile Object
+                    Profile defaultProfile = new() { Name = "Default" };
+
+                    // Save Profile Object
+                    string defaultJson = JsonConvert.SerializeObject(defaultProfile);
+                    File.WriteAllText(Path.Combine(PROFILE_FOLDER, folderName + ".json"), defaultJson);
+
+                    ElementProfiles.Add(defaultProfile);
+                    continue;
                 }
 
                 string profileName = folderName.Replace("Element-", "");
-                ElementProfiles.Add(new Profile() { Name = profileName });
+
+                // Skip already imported profiles
+                if (ProfileExists(profileName))
+                {
+                    Debug.WriteLine($"Skipped import: {profileName}");
+                    continue;
+                }
+
+                // Create Profile Object
+                Profile profile = new() { Name = profileName };
+
+                // Save Profile Object
+                string json = JsonConvert.SerializeObject(profile);
+                File.WriteAllText(Path.Combine(PROFILE_FOLDER, folderName + ".json"), json);
+
+                // Add Profile to List
+                ElementProfiles.Add(profile);
             }
         }
 
