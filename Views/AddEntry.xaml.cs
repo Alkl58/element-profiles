@@ -1,7 +1,6 @@
 ﻿using System.Windows;
-using System.Windows.Controls.Primitives;
 
-namespace element_profiles.Controls
+namespace element_profiles.Views
 {
     public partial class AddEntry : Window
     {

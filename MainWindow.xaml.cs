@@ -1,4 +1,3 @@
-﻿using element_profiles.Controls;
 using element_profiles.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -51,7 +50,12 @@ namespace element_profiles
             string elementExec = Path.Combine(localAppdata, "element-desktop", "Element.exe");
             if (!File.Exists(elementExec))
             {
-                MessageBox.Show("Element Executable not found!");
+                MessageDialog md = new()
+                {
+                    WindowTitle = "Element not found!",
+                    Message = "Please make sure Element-Desktop is installed!"
+                };
+                md.ShowDialog();
                 return;
             }
 

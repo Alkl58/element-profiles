@@ -13,11 +13,13 @@
   <ItemGroup>
     <None Remove="Assets\app.ico" />
     <None Remove="Assets\icons8-add-96.png" />
+    <None Remove="Assets\icons8-error-96.png" />
     <None Remove="Assets\icons8-remove-96.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\app.ico" />
+    <Resource Include="Assets\icons8-error-96.png" />
     <Resource Include="Assets\icons8-add-96.png" />
     <Resource Include="Assets\icons8-remove-96.png" />
   </ItemGroup>

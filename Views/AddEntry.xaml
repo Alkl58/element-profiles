@@ -1,9 +1,9 @@
-﻿<Window x:Class="element_profiles.Controls.AddEntry"
+﻿<Window x:Class="element_profiles.Views.AddEntry"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:element_profiles.Controls"
+        xmlns:local="clr-namespace:element_profiles.Views"
         mc:Ignorable="d"
         ThemeMode="System"
         Title="Add Entry" Height="130" Width="344" WindowStartupLocation="CenterScreen">
