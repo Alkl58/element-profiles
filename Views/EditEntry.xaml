@@ -1,4 +1,4 @@
-﻿<Window x:Class="element_profiles.Views.AddEntry"
+﻿<Window x:Class="element_profiles.Views.EditEntry"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,12 +6,12 @@
         xmlns:local="clr-namespace:element_profiles.Views"
         mc:Ignorable="d"
         ThemeMode="System"
-        Title="Add Entry" Height="130" Width="344" WindowStartupLocation="CenterScreen">
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Edit Entry" Height="130" Width="344" WindowStartupLocation="CenterScreen">
     <Grid>
-        <TextBox x:Name="TextBoxProfileName" Margin="109,11,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="27" AutomationProperties.HelpText="user"/>
+        <TextBox x:Name="TextBoxUserName" Margin="109,11,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="27" Text="{Binding Profile.Name}" />
         <Label Content="Profile Name: " HorizontalAlignment="Left" Margin="10,17,0,0" VerticalAlignment="Top" Width="94"/>
-        <Button x:Name="ButtonOk" Click="ButtonOk_Click" Content="Create" Margin="0,0,81,10" VerticalAlignment="Bottom" Height="32" HorizontalAlignment="Right" Width="66"/>
+        <Button x:Name="ButtonOk" Click="ButtonOk_Click" Content="Save" Margin="0,0,81,10" VerticalAlignment="Bottom" Height="32" HorizontalAlignment="Right" Width="66"/>
         <Button x:Name="ButtonCancel" Click="ButtonCancel_Click" Content="Cancel" Margin="0,0,10,10" VerticalAlignment="Bottom" Height="32" HorizontalAlignment="Right" Width="66"/>
-
     </Grid>
 </Window>

@@ -1,5 +1,6 @@
 ﻿using element_profiles.Models;
 using element_profiles.Views;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -7,12 +8,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace element_profiles
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private static readonly string PROFILE_FOLDER = Path.Combine(Directory.GetCurrentDirectory(), "profiles");
+        public static readonly string PROFILE_FOLDER = Path.Combine(Directory.GetCurrentDirectory(), "profiles");
 
         private static string? elementExecutablePath;
 
@@ -110,86 +112,81 @@ namespace element_profiles
             {
                 string folderName = Path.GetFileName(folder);
 
-                // Default Profile
-                if (folderName == "Element")
-                {
-                    // Skip already imported profiles
-                    if (ProfileExists(folderName))
-                    {
-                        Debug.WriteLine($"Skipped import: {folderName}");
-                        continue;
-                    }
-
-                    // Create Profile Object
-                    Profile defaultProfile = new() { Name = "Default" };
-
-                    // Save Profile Object
-                    string defaultJson = JsonConvert.SerializeObject(defaultProfile);
-                    File.WriteAllText(Path.Combine(PROFILE_FOLDER, folderName + ".json"), defaultJson);
-
-                    ElementProfiles.Add(defaultProfile);
-                    continue;
-                }
-
-                string profileName = folderName.Replace("Element-", "");
-
                 // Skip already imported profiles
-                if (ProfileExists(profileName))
+                if (ProfileExists(folderName))
                 {
-                    Debug.WriteLine($"Skipped import: {profileName}");
+                    Debug.WriteLine($"Skipped import: {folderName}");
                     continue;
                 }
+
+                // Profile Name, if the default folder is used, explicitly set it to "Default"
+                string profileName =  folderName == "Element" ? "Default" : folderName.Replace("Element-", "");
 
                 // Create Profile Object
-                Profile profile = new() { Name = profileName };
+                Profile profile = new() 
+                { 
+                    Name = profileName,
+                    Folder = folderName,
+                    IsDefaultProfile = folderName == "Element",
+                };
 
-                // Save Profile Object
-                string json = JsonConvert.SerializeObject(profile);
-                File.WriteAllText(Path.Combine(PROFILE_FOLDER, folderName + ".json"), json);
+                profile.SaveProfile();
 
                 // Add Profile to List
                 ElementProfiles.Add(profile);
             }
         }
 
-        private bool ProfileExists(string profileName)
+        private bool ProfileExists(string folderName)
         {
             return ElementProfiles.Any(p =>
-                string.Equals(p.Name, profileName, StringComparison.OrdinalIgnoreCase));
+                string.Equals(p.Folder, folderName, StringComparison.OrdinalIgnoreCase));
         }
 
 
         #region Buttons
+        private void ButtonEditProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListBoxProfiles.SelectedItem is not Profile selectedProfile)
+            {
+                return;
+            }
+
+            // We don't want to edit the original object
+            Profile tempProfile = new()
+            {
+                Name = selectedProfile.Name,
+                Folder = selectedProfile.Folder,
+            };
+
+            EditEntry editEntry = new()
+            {
+                Profile = tempProfile
+            };
+
+            bool? result = editEntry.ShowDialog();
+            if (result == true)
+            {
+                selectedProfile.Name = tempProfile.Name;
+                selectedProfile.SaveProfile();
+
+                // Reload List
+                LoadProfiles();
+            }
+        }
+
         private void ButtonRemoveProfile_Click(object sender, RoutedEventArgs e)
         {
-            var selectedProfile = ListBoxProfiles.SelectedItem as Profile;
-            if (selectedProfile == null)
+            if (ListBoxProfiles.SelectedItem is not Profile selectedProfile)
             {
                 return;
             }
 
-            if (selectedProfile.Name == "Default") 
+            // Delete Entry from List if successfully deleted
+            if (selectedProfile.DeleteProfile())
             {
-                MessageBox.Show("Can't delete default Profile");
-                return;
+                ElementProfiles.Remove(selectedProfile);
             }
-
-            string roamingAppdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string profileFolder = Path.Combine(roamingAppdata, "Element-" +  selectedProfile.Name);
-
-            if (Directory.Exists(profileFolder)) 
-            {
-                try
-                {
-                    Directory.Delete(profileFolder, true);
-                    ElementProfiles.Remove(selectedProfile);
-                }
-                catch (Exception ex) 
-                { 
-                    MessageBox.Show(ex.Message, "Error Deleting Profile", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            
         }
 
         private void ButtonLaunch_Click(object sender, RoutedEventArgs e)
@@ -199,7 +196,8 @@ namespace element_profiles
                 string argument = "";
                 if (profile.Name != "Default")
                 {
-                    argument = $"--profile=\"{profile.Name}\"";
+                    string profileArg = profile.Folder.Replace("Element-", "");
+                    argument = $"--profile=\"{profileArg}\"";
                 }
 
                 var startInfo = new ProcessStartInfo
@@ -214,19 +212,33 @@ namespace element_profiles
 
         private void ButtonAddProfile_Click(object sender, RoutedEventArgs e)
         {
-            AddEntry addEntry = new AddEntry();
+            AddEntry addEntry = new();
             bool? result = addEntry.ShowDialog();
 
             if (result == true)
             {
-                string profileName = addEntry.ProfileName;
-                if (ProfileExists(profileName))
+                string folderName = $"Element-{addEntry.ProfileName}";
+
+                if (ProfileExists(folderName))
                 {
-                    MessageBox.Show("A profile with this name already exists.", "Duplicate profile", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageDialog md = new()
+                    {
+                        WindowTitle = "Duplicate profile!",
+                        Message = "A profile with this name already exists."
+                    };
+                    md.ShowDialog();
                     return;
                 }
 
-                ElementProfiles.Add(new Profile() { Name = profileName });
+                Profile profile = new()
+                {
+                    Name = addEntry.ProfileName,
+                    Folder = folderName,
+                };
+
+                profile.SaveProfile();
+
+                ElementProfiles.Add(profile);
             }
         }
         #endregion

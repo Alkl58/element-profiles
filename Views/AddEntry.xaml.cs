@@ -4,7 +4,7 @@ namespace element_profiles.Views
 {
     public partial class AddEntry : Window
     {
-        public string ProfileName { get; private set; }
+        public string ProfileName { get; set; }
 
         public AddEntry()
         {
